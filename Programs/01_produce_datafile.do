@@ -14,7 +14,7 @@ global root "C:\Users\Jennah\iCloudDrive\Desktop\Wagner\AEM\Replication"
 global prog "$root/Programs"
 global out  "${root}/Output"
 
-local data  "raw pums80 slim.dta"
+global data  "raw pums80 slim.dta"
 
 * define log file
 log using "${prog}/01_produce_datafile.log", replace text
@@ -29,38 +29,20 @@ log using "${prog}/01_produce_datafile.log", replace text
 *---------------------------------------------------------------------------------------------------
 * LOAD DATA + SIMPLE DESCRIPTIVES
 *---------------------------------------------------------------------------------------------------
-use "${root}/`data'", clear
+use "${root}/${data}", clear
 count 
 
-* create varlist
-preserve 
-	desc *, clear replace
-	list *
-	export excel using "${out}/varlist.xlsx", replace firstrow(variables) keepcellfmt
-restore 
-
-* load data, put in mom exclusion criteria, then exclude them?
-* identified mom's that we're interested in
-* generated children of the mom's that we're interested in
-* then split them
-
-* drop nkids != total household kids
-* 
-
-* do age restrictions and age of second child, two or more kids
-* do the drop if own children is different than number of children 
-
 drop agemarr us80a_momloc age sex hispan school race
-*drop us80a_agemarr us80a_momloc us80a_age us80a_sex us80a_hispan us80a_school us80a_race
 ren us80a_* *
 
-*gen age_qtr = (age*4) + birthqtr
-*tablist age_qtr age birthqtr, sort(v) ab(30) clean
-
+* generate birthfrac variable based on birthqtr
 gen birthfrac = 1-(birthqtr/4)
 gen age_qtr = age + birthfrac
+assert age_qtr < 1 if age == 0
 
+*---------------------------------------------------------------------------------------------------
 * Initial constructs
+*---------------------------------------------------------------------------------------------------
 * Race and ethnicity
 * indicator for Black
 tablist race, sort(v) 
@@ -74,7 +56,50 @@ tablist hisp hispan race, sort(v) ab(30)
 gen 	r_oth = (inrange(race, 4, 13)) if !mi(race)
 tablist r_oth		 race, sort(v) ab(30) clean
 
+* chcek race variables
 tablist r_black hisp r_oth race, sort(v) ab(30) clean
+
+* labor variables
+* worked for pay (= 1 if worked for pay in year prior to census)
+assert !mi(wkswork1)
+assert inrange(wkswork1, 0, 52)
+* recode us80a_wkswork1 (0=0 "Didnt work") (1/52=1 "Worked"), gen(wrkdlastyr)
+gen 	wkpay_lyr = (wkswork1 > 0)
+tablist wkpay_lyr 	 wkswork1, sort(v) ab(30) clean
+
+* weeks worked (already in data)
+* wkswork1
+assert 		wkswork1 == 0 if wkpay_lyr == 0
+
+* hours per week 
+* uhrswork
+assert	 	uhrswork == 0 if wkpay_lyr == 0
+
+* labor income (labor earnings in year prior to census, in 1995 dollars)
+* incwage
+clonevar 	incwage_orig = incwage
+replace	 	incwage = 0 if wkpay_lyr == 0
+replace 	incwage = 2.099173554 * incwage_orig
+
+* family income (family income in year prior to census, in 1995 dollars)
+* ftotinc
+clonevar 	ftotinc_orig = ftotinc
+replace 	ftotinc = 2.099173554 * ftotinc_orig
+
+* non-wife income (family income minus wife's labor income, in 1995 dollars)
+gen nonwinc = ftotinc - incwage
+
+* replace 0 and negative values with 1
+clonevar ftotinc_temp = ftotinc
+replace  ftotinc_temp = 1 if ftotinc_temp <= 0
+
+clonevar nonwinc_temp = nonwinc
+replace  nonwinc_temp = 1 if nonwinc_temp <= 0
+
+gen l_ftotinc = ln(ftotinc_temp) // log transform variables
+gen l_nonwinc = ln(nonwinc_temp)
+
+local outcome_vars wkpay_lyr wkswork1 uhrswork incwage ftotinc l_ftotinc l_nonwinc 
 
 *---------------------------------------------------------------------------------------------------
 * RESHAPE DATA
@@ -132,7 +157,7 @@ restore
 * Filter for father
 preserve 
 	keep if sploc != 0 & sex == 1
-	keep serial sploc sex age birthqtr qsex qage qbirthmo age_qtr
+	keep serial sploc sex age birthqtr qsex qage qbirthmo age_qtr `outcome_vars'
 
 	ren * *_father
 	ren (sploc_father serial_father) (pernum serial)
@@ -142,16 +167,21 @@ preserve
 	save 		"`sploc_data'", replace
 restore 
 
+count 
+
 * merge back onto the original data fileusing serial and pernum
-merge 1:1 serial pernum using "`momloc_data'", nogen keep(3) // merge to children
-merge 1:1 serial pernum using "`sploc_data'", keep(1 3) // merge to fathers
+merge 1:1 serial pernum using "`momloc_data'", nogen 	keep(3) // merge to children
+merge 1:1 serial pernum using "`sploc_data'", 			keep(1 3) // merge to fathers
 
 ren _merge _father_merge
 count
 
+save "${out}/merged_data", replace
+
 *---------------------------------------------------------------------------------------------------
 * PRODUCE CONSTRUCTS
 *---------------------------------------------------------------------------------------------------
+use "${out}/merged_data", clear
 isid serial pernum // check uniquenesss
 
 * sex-mix estimation strategy is implemented using information
@@ -176,14 +206,10 @@ gen age_36_50 = inrange(age, 36, 50)
 
 tablist age_21_35 age_36_50 age, sort(v) ab(30) clean
 
-* we attached people in a household labeled as "child" in the primary relationship
-* code to a female householder or the spouse of a male householder
-gen ischild = momloc > 0 & !mi(momloc)
-
 * we deleted any mother for whom the number of children in the household did not match
 * the number of children ever born
 assert chborn_orig != 0 // not in universe
-
+*assert chborn_orig != 1 // has 0 children
 replace chborn = 9 if inrange(chborn, 9, 12) // need to fix, coding does not line up
  
 count 	if nchild != chborn
@@ -213,6 +239,7 @@ label variable cnum_mte2 	"Mother had more than or equal to two children"
 * except for women who's second child is less than 1 year old
 egen age_oldest = 	rowmax(age? age??)
 assert age_oldest == age1 // check this is true
+
 egen age_youngest = rowmin(age? age??)
 label variable age_oldest 	"Age of mother's oldest child"
 label variable age_youngest "Age of mother's youngest child"
@@ -255,51 +282,13 @@ label variable twins "Second and third children are twins"
 gen age_fbirth = (age_qtr - age_oldest_qtr)
 label variable age_fbirth "Age at first birth"
 
-* labor variables
-* worked for pay (= 1 if worked for pay in year prior to census)
-assert !mi(wkswork1)
-assert inrange(wkswork1, 0, 52)
-* recode us80a_wkswork1 (0=0 "Didnt work") (1/52=1 "Worked"), gen(wrkdlastyr)
-gen 	wkpay_lyr = (wkswork1 > 0)
-tablist wkpay_lyr 	 wkswork1, sort(v) ab(30) clean
-
-* weeks worked (already in data)
-*wkswork1
-assert 		wkswork1 == 0 if wkpay_lyr == 0
-
-* hours per week 
-* uhrswork
-assert	 	uhrswork == 0 if wkpay_lyr == 0
-
-* labor income (labor earnings in year prior to census, in 1995 dollars)
-* incwage
-clonevar 	incwage_orig = incwage
-replace	 	incwage = 0 if wkpay_lyr == 0
-replace 	incwage = 2.099173554 * incwage_orig
-
-* family income (family income in year prior to census, in 1995 dollars)
-* ftotinc
-clonevar 	ftotinc_orig = ftotinc
-replace 	ftotinc = 2.099173554 * ftotinc_orig
-
-
-* non-wife income (family income minus wife's labor income, in 1995 dollars)
-gen nonwinc = ftotinc - incwage
-
-* replace 0 and negative values with 1
-clonevar ftotinc_temp = ftotinc
-replace  ftotinc_temp = 1 if ftotinc_temp <= 0
-
-clonevar nonwinc_temp = nonwinc
-replace  nonwinc_temp = 1 if nonwinc_temp <= 0
-
-gen l_ftotinc = ln(ftotinc_temp) // log transform variables
-gen l_nonwinc = ln(nonwinc_temp)
+gen age_fbirth_father = (age_qtr_father - age_oldest_qtr)
+label variable age_fbirth_father "Age at first birth (father"
 
 *---------------------------------------------------------------------------------------------------
-* FILTER FOR SAMPLE 1 AND SAMPLE 2
+* FILTER FOR SAMPLE 1 (all mothers), SAMPLE 2 (married mothers), and SAMPLE 3 (married fathers)
 *---------------------------------------------------------------------------------------------------
-keep if age_21_35 == 1 & age_oldest < 18 & cnum_mte2 == 1 & age2 >= 1
+keep if age_21_35 == 1 & age_oldest < 18 & cnum_mte2 == 1 & age2 >= 1 & !mi(age2)
 *keep if inrange(age_qtr, 21, 35.75) & age_oldest < 18 & cnum_mte2 == 1 & age_qtr2 >= 1
 
 * the first includes all women with two kids or more children
@@ -339,53 +328,17 @@ preserve
 	tempfile 	sample2
 	save 		"`sample2'", replace
 	save 		"${out}/sample2", replace
-restore 
 
-*---------------------------------------------------------------------------------------------------
-* DESCRIPTIVES OF CONSTRUCTS
-*---------------------------------------------------------------------------------------------------
-tempname memhold 
-tempfile descriptives
+	* create father sample
+	drop `outcome_vars' sex age birthqtr qsex qage qbirthmo age_qtr age_fbirth
+	ren (*_father) 	(*)
+	keep serial `outcome_vars' sex age birthqtr qsex qage qbirthmo age_qtr age_fbirth
+	assert sex == 1
 
-postfile `memhold' str30(varname sample) str180(varlab) double(N min p5 p25 median mean p75 p95 max) ///
-	using `descriptives', replace
-
-forvalues i = 1/2 { // loop for sample version (1 = all, 2 = married)
-	preserve 
-		use "${out}/sample`i'", clear // load data file for sample
-
-		local addvar 
-		if `i' == 2 {
-			local addvar marr_fbirth
-		}
-
-		* constructs to perform descriptives on
-		qui ds chborn cnum_mt2 f_boy s_boy twoboys twogirls samesex twins age_fbirth age_oldest age1 age2 `addvar'
-		foreach v in `r(varlist)' { // iterate through the relevant variable list
-			local lab : variable label `v'
-			* check if numeric
-			cap confirm numeric variable `v'
-			if _rc == 0 {
-				qui sum `v', d 
-				post `memhold' 	("`v'") 	("sample`i'") 	("`lab'") 	(r(N)) 		///
-								(r(min)) 	(r(p5)) 		(r(p25)) 	(r(p50)) 	///
-								(r(mean)) 	(r(p75))		(r(p95)) 	(r(max))
-			}
-			else {
-				di "`v' is string, output suppressed"
-				post `memhold' ("`v'") ("analysis") ("`lab'") (.) (.) (.) (.) (.) (.) (.) (.) (.)
-			}
-		}
-	restore 
-}
-postclose `memhold'
-
-preserve
-	use "`descriptives'", clear
-
-	list varname sample N min p5 p25 median mean p75 p95 max
-	export excel using "${out}/descriptives.xlsx", replace firstrow(variables) keepcellfmt
-restore 
+	tempfile 	sample3
+	save 		"`sample3'", replace
+	save 		"${out}/sample3", replace
+restore
 
 *---------------------------------------------------------------------------------------------------
 * TABLE 2
@@ -393,20 +346,36 @@ restore
 tempname memhold 
 tempfile tbl2
 
-postfile `memhold' str30(varname sample) double(mean N) ///
+postfile `memhold' str30(varname sample mean) double(N order) ///
 	using `tbl2', replace
 
-forvalues s = 1/2 {
+forvalues s = 1/3 {
 	preserve 
 		use "${out}/sample`s'", clear
 
-		local s_lab = cond(`s' == 1, "all mothers", "married mothers")
+		if `s' == 1 local s_lab "all mothers"
+		else if `s' == 2 local s_lab "married mothers"
+		else if `s' == 3 local s_lab "married fathers"
 
-		foreach var in 	chborn 		cnum_mt2 	f_boy 	s_boy 	twoboys twogirls samesex twins age age_fbirth wkpay_lyr ///
-						wkswork1 	incwage	 	ftotinc nonwinc {
+		local sort_order = 0
+		foreach var in 	chborn 		cnum_mt2 	f_boy 		s_boy 	twoboys twogirls samesex twins age age_fbirth wkpay_lyr ///
+						uhrswork 	wkswork1 	incwage	 	ftotinc nonwinc {
+			local sort_order = `sort_order' + 1 // increment
+
+			cap confirm variable `var'
+			if _rc != 0 {
+				post `memhold' ("`var'") ("`s_lab'") ("") (.) (`sort_order')
+				continue
+			}
 
 			sum `var'
-			post `memhold' ("`var'") ("`s_lab'") (r(mean)) (r(N))
+
+			local n = cond(`r(mean)' >= 1000, 6, 5)
+			local d = cond(`r(mean)' >= 1000, 0, 3)
+			local mean : 	di %`n'.`d'fc `r(mean)'
+			local sd : 		di %`n'.`d'fc `r(sd)'
+			local mean_form "`mean' `=char(13)'(`sd')"
+			post `memhold' ("`var'") ("`s_lab'") ("`mean_form'") (r(N)) (`sort_order')
 		}
 	restore 
 }
@@ -416,15 +385,20 @@ postclose `memhold'
 preserve
 	use "`tbl2'", clear
 
-	export excel using "${out}/table_results.xlsx", sheet("table 2") sheetreplace firstrow(variables) keepcellfmt
+	keep varname sample mean order
+	replace sample = subinstr(sample, " ", "_", .)
+	reshape wide mean, i(varname order) j(sample) string
+
+	sort order
+	drop order
+
+	label variable meanall_mothers	 	"All mothers"
+	label variable meanmarried_mothers 	"Married mothers"
+	label variable meanmarried_fathers 	"Married fathers"
+	order varname meanall_mothers meanmarried_mothers meanmarried_fathers
+
+	export excel using "${out}/table_results.xlsx", sheet("table 2") sheetreplace firstrow(varlabels) keepcellfmt
 restore 
-
-* recoding educaition variables
-
-* all married: 393758
-* married: 253024
-* husbands: married, present; married, absent
-* married sample: 
 
 *---------------------------------------------------------------------------------------------------
 * TABLE 6 - OLS estimates
