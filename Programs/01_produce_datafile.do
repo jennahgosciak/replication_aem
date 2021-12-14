@@ -17,7 +17,7 @@ global out  "${root}/Output"
 global data  "raw pums80 slim.dta"
 
 * define log file
-*log using "${prog}/01_produce_datafile.log", replace text
+log using "${prog}/01_produce_datafile.log", replace text
 
 *---------------------------------------------------------------------------------------------------
 *  Course: 	Advanced Empirical Methods
@@ -56,7 +56,7 @@ gen 	hisp = (inlist(hispan, 1, 2, 3, 4) | race == 2) if !mi(hispan)
 *gen 	hisp = (race == 2) if !mi(race)
 tablist hisp hispan race, sort(v) ab(30)
 
-gen 	r_oth = (inrange(race, 4, 13)) if !mi(race)
+gen 	r_oth = (inrange(race, 4, 13)) & hisp != 1 if !mi(race)
 tablist r_oth		 race, sort(v) ab(30) clean
 
 * chcek race variables
@@ -429,10 +429,10 @@ restore
 * TABLE 6 - OLS estimates
 *---------------------------------------------------------------------------------------------------
 
-local allcov 	f_boy s_boy samesex twoboys twogirls 	i.age i.age_fbirth r_black hisp r_oth
+local allcov 	f_boy s_boy samesex twoboys twogirls 	age age_fbirth r_black hisp r_oth
 local covars1 				samesex
-local covars2 	f_boy s_boy samesex 					i.age i.age_fbirth r_black hisp r_oth
-local covars3 	f_boy 				twoboys twogirls 	i.age i.age_fbirth r_black hisp r_oth
+local covars2 	f_boy s_boy samesex 					age age_fbirth r_black hisp r_oth
+local covars3 	f_boy 				twoboys twogirls 	age age_fbirth r_black hisp r_oth
 
 tempname memhold 
 tempfile tbl6
