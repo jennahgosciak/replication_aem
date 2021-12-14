@@ -8,16 +8,16 @@ set type double
 pause on
 
 * define path to data
-global root "C:\Users\Jennah\iCloudDrive\Desktop\Wagner\AEM\Replication"
+global root "C:\Users\Jennah\Desktop\Code\replication_aem"
 
-*global inp  "${root}/raw pums80 slim.dta"
+global inp  "${root}/Input"
 global prog "$root/Programs"
 global out  "${root}/Output"
 
 global data  "raw pums80 slim.dta"
 
 * define log file
-log using "${prog}/01_produce_datafile.log", replace text
+*log using "${prog}/01_produce_datafile.log", replace text
 
 *---------------------------------------------------------------------------------------------------
 *  Course: 	Advanced Empirical Methods
@@ -29,7 +29,7 @@ log using "${prog}/01_produce_datafile.log", replace text
 *---------------------------------------------------------------------------------------------------
 * LOAD DATA + SIMPLE DESCRIPTIVES
 *---------------------------------------------------------------------------------------------------
-use "${root}/${data}", clear
+use "${root}/Input/${data}", clear
 count 
 
 drop agemarr us80a_momloc age sex hispan school race
@@ -43,14 +43,17 @@ assert age_qtr < 1 if age == 0
 *---------------------------------------------------------------------------------------------------
 * Initial constructs
 *---------------------------------------------------------------------------------------------------
+* other is not black, not hispanic, and not white
+* black can include non-hispanic
+
 * Race and ethnicity
 * indicator for Black
 tablist race, sort(v) 
 gen 	r_black = 	(race == 3) if !mi(race) 
 tablist r_black 	 race, sort(v) ab(30) clean
 
-*gen 	hisp = (inlist(hispan, 1, 2, 3, 4) | race == 2) if !mi(hispan)
-gen 	hisp = (race == 2) if !mi(race)
+gen 	hisp = (inlist(hispan, 1, 2, 3, 4) | race == 2) if !mi(hispan)
+*gen 	hisp = (race == 2) if !mi(race)
 tablist hisp hispan race, sort(v) ab(30)
 
 gen 	r_oth = (inrange(race, 4, 13)) if !mi(race)
@@ -76,6 +79,8 @@ assert 		wkswork1 == 0 if wkpay_lyr == 0
 assert	 	uhrswork == 0 if wkpay_lyr == 0
 
 * labor income (labor earnings in year prior to census, in 1995 dollars)
+* replace with 0 for all labor variables
+*replace negative values with 0!!
 * incwage
 clonevar 	incwage_orig = incwage
 replace	 	incwage = 0 if wkpay_lyr == 0
@@ -99,7 +104,7 @@ replace  nonwinc_temp = 1 if nonwinc_temp <= 0
 gen l_ftotinc = ln(ftotinc_temp) // log transform variables
 gen l_nonwinc = ln(nonwinc_temp)
 
-local outcome_vars wkpay_lyr wkswork1 uhrswork incwage ftotinc l_ftotinc l_nonwinc 
+local outcome_vars wkpay_lyr uhrswork wkswork1 incwage ftotinc l_ftotinc l_nonwinc 
 
 *---------------------------------------------------------------------------------------------------
 * RESHAPE DATA
@@ -170,7 +175,7 @@ restore
 count 
 
 * merge back onto the original data fileusing serial and pernum
-merge 1:1 serial pernum using "`momloc_data'", nogen 	keep(3) // merge to children
+merge 1:1 serial pernum using "`momloc_data'", nogen 	keep(3) assert(1 3) // merge to children
 merge 1:1 serial pernum using "`sploc_data'", 			keep(1 3) // merge to fathers
 
 ren _merge _father_merge
@@ -181,6 +186,8 @@ save "${out}/merged_data", replace
 *---------------------------------------------------------------------------------------------------
 * PRODUCE CONSTRUCTS
 *---------------------------------------------------------------------------------------------------
+local outcome_vars wkpay_lyr uhrswork wkswork1 incwage ftotinc l_ftotinc l_nonwinc 
+
 use "${out}/merged_data", clear
 isid serial pernum // check uniquenesss
 
@@ -200,7 +207,7 @@ replace  	chborn = chborn - 1
 label drop us80a_chbornlbl
 tablist chborn chborn_orig, sort(v) ab(30) clean
 
-* women aged 21-25 and aged 36-50
+* women aged 21-35 and aged 36-50
 gen age_21_35 = inrange(age, 21, 35)
 gen age_36_50 = inrange(age, 36, 50)
 
@@ -276,19 +283,29 @@ label variable samesex "First two children are the same sex"
 * siblings having the same age and quarter of birth
 * birthqtr increases accuracy
 gen twins = (age2 == age3) & (birthqtr2 == birthqtr3)
-label variable twins "Second and third children are twins"
+label variable twins "Second and third children aretwins"
 
 * age at first birth
+/*
 gen age_fbirth = (age_qtr - age_oldest_qtr)
 label variable age_fbirth "Age at first birth"
 
 gen age_fbirth_father = (age_qtr_father - age_oldest_qtr)
 label variable age_fbirth_father "Age at first birth (father"
+*/
+gen 	age_fbirth = age - age_oldest 		if birthqtr <= 	birthqtr1
+replace age_fbirth = age - age_oldest - 1 	if birthqtr > 	birthqtr1
+
+gen 	age_fbirth_father = age_father - age_oldest 		if birthqtr_father <= birthqtr1
+replace age_fbirth_father = age_father - age_oldest - 1 	if birthqtr_father > birthqtr1
+label variable age_fbirth_father "Age at first birth (father)"
+
+tablist age_fbirth, sort(v) ab(30) clean
 
 *---------------------------------------------------------------------------------------------------
 * FILTER FOR SAMPLE 1 (all mothers), SAMPLE 2 (married mothers), and SAMPLE 3 (married fathers)
 *---------------------------------------------------------------------------------------------------
-keep if age_21_35 == 1 & age_oldest < 18 & cnum_mte2 == 1 & age2 >= 1 & !mi(age2)
+keep if age_21_35 == 1 & cnum_mte2 == 1 & age2 >= 1 & !mi(age2) & age_oldest < 18 
 *keep if inrange(age_qtr, 21, 35.75) & age_oldest < 18 & cnum_mte2 == 1 & age_qtr2 >= 1
 
 * the first includes all women with two kids or more children
@@ -310,12 +327,18 @@ preserve
 	*gen 	marr_fbirth = (len_married >= age_oldest)
 	*gen 	marr_fbirth = (age - age_oldest) >= agemarr
 
-	gen marrfrac = 1 - (marrqtr/4)
-	gen agemarr_qtr = agemarr + marrfrac
+	*gen marrfrac = 1 - (marrqtr/4)
+	*gen agemarr_qtr = agemarr + marrfrac
 
 	* gte
-	gen  	marr_fbirth = (age_qtr - age_oldest_qtr) >= agemarr_qtr
+	*gen  	marr_fbirth = (age_qtr - age_oldest_qtr) >= agemarr_qtr
 	
+	gen 	marr_fbirth = 1 if (agemarr == 	age_fbirth 	& marrqtr <= 	birthqtr)
+	replace marr_fbirth = 1 if (agemarr < 	age_fbirth)
+	replace marr_fbirth = 0 if (agemarr == 	age_fbirth 	& marrqtr > 	birthqtr)
+	replace marr_fbirth = 0 if (agemarr > 	age_fbirth)
+	assert !mi(marr_fbirth)
+
 	label variable marr_fbirth "Married at first birth"
 	tablist marr_fbirth 	age 		age_oldest, sort(v) ab(30) clean
 	tablist marr_fbirth 	age_qtr 	age_oldest_qtr, sort(v) ab(30) clean
@@ -332,7 +355,8 @@ preserve
 	* create father sample
 	drop `outcome_vars' sex age birthqtr qsex qage qbirthmo age_qtr age_fbirth
 	ren (*_father) 	(*)
-	keep serial `outcome_vars' sex age birthqtr qsex qage qbirthmo age_qtr age_fbirth
+	keep serial `outcome_vars' sex age birthqtr qsex qage qbirthmo age_qtr age_fbirth cnum_mt2 ///
+								f_boy s_boy twoboys twogirls samesex r_black hisp r_oth
 	assert sex == 1
 
 	tempfile 	sample3
@@ -358,8 +382,9 @@ forvalues s = 1/3 {
 		else if `s' == 3 local s_lab "married fathers"
 
 		local sort_order = 0
-		foreach var in 	chborn 		cnum_mt2 	f_boy 		s_boy 	twoboys twogirls samesex twins age age_fbirth wkpay_lyr ///
-						uhrswork 	wkswork1 	incwage	 	ftotinc nonwinc {
+		foreach var in 	chborn 		cnum_mt2 	f_boy 		s_boy 		twoboys twogirls ///
+						samesex 	twins 		age 		age_fbirth 	wkpay_lyr ///
+						uhrswork 	wkswork1 	incwage	 	ftotinc 	nonwinc {
 			local sort_order = `sort_order' + 1 // increment
 
 			cap confirm variable `var'
@@ -403,10 +428,11 @@ restore
 *---------------------------------------------------------------------------------------------------
 * TABLE 6 - OLS estimates
 *---------------------------------------------------------------------------------------------------
-local allcov 	f_boy s_boy samesex twoboys twogirls 	age age_fbirth r_black hisp r_oth
+
+local allcov 	f_boy s_boy samesex twoboys twogirls 	i.age i.age_fbirth r_black hisp r_oth
 local covars1 				samesex
-local covars2 	f_boy s_boy samesex 					age age_fbirth r_black hisp r_oth
-local covars3 	f_boy 				twoboys twogirls 	age age_fbirth r_black hisp r_oth
+local covars2 	f_boy s_boy samesex 					i.age i.age_fbirth r_black hisp r_oth
+local covars3 	f_boy 				twoboys twogirls 	i.age i.age_fbirth r_black hisp r_oth
 
 tempname memhold 
 tempfile tbl6
@@ -481,27 +507,29 @@ use "${out}/sample1", clear
 reg cnum_mt2 samesex, r 
 outreg2 using "${out}/table_2", keep(samesex) excel ctitle(OLS - no covar) replace
 
-reg cnum_mt2 f_boy s_boy samesex 						age age_fbirth r_black hisp r_oth, r
+reg cnum_mt2 f_boy s_boy samesex 						i.age i.age_fbirth r_black hisp r_oth, r
 outreg2 using "${out}/table_2", keep(f_boy s_boy samesex) excel ctitle(OLS) append
 
-reg cnum_mt2 f_boy 					twoboys twogirls 	age age_fbirth r_black hisp r_oth, r
+reg cnum_mt2 f_boy 					twoboys twogirls 	i.age i.age_fbirth r_black hisp r_oth, r
 outreg2 using "${out}/table_2", keep(f_boy s_boy twoboys twogirls) excel ctitle(OLS) append
 
 use "${out}/sample2", clear
 reg cnum_mt2 samesex, r 
 outreg2 using "${out}/table_2", keep(samesex) excel ctitle(OLS - no covar) append
 
-reg cnum_mt2 f_boy s_boy samesex 						age age_fbirth r_black hisp r_oth, r
+reg cnum_mt2 f_boy s_boy samesex 						i.age i.age_fbirth r_black hisp r_oth, r
 outreg2 using "${out}/table_2", keep(f_boy s_boy samesex) excel ctitle(OLS) append
 
-reg cnum_mt2 f_boy 					twoboys twogirls 	age age_fbirth r_black hisp r_oth, r
+reg cnum_mt2 f_boy 					twoboys twogirls 	i.age i.age_fbirth r_black hisp r_oth, r
 outreg2 using "${out}/table_2", keep(f_boy s_boy twoboys twogirls) excel ctitle(OLS) append
 
 *---------------------------------------------------------------------------------------------------
 * TABLE 7
 *---------------------------------------------------------------------------------------------------
-local depvars wkpay_lyr wkswork1 incwage l_ftotinc l_nonwinc
-local allcov age age_fbirth f_boy s_boy r_black hisp r_oth
+local depvars wkpay_lyr wkswork1 uhrswork incwage l_ftotinc l_nonwinc
+local allcov 		age age_fbirth f_boy s_boy 	r_black hisp r_oth
+local allcov_alt 	age age_fbirth f_boy 		r_black hisp r_oth
+
 local instr2 samesex
 local instr3 "twogirls twoboys"
 tempname memhold 
@@ -510,21 +538,31 @@ tempfile tbl7
 postfile `memhold' str30(varname sample) double(model order) str30(est) ///
 	using `tbl7', replace
 
-forvalues s = 1/2 {
+forvalues s = 1/3 {
 	preserve 
 		use "${out}/sample`s'", clear
 
-		local s_lab = cond(`s' == 1, "all mothers", "married mothers")
+		if `s' == 1 local s_lab "all mothers"
+		else if `s' == 2 local s_lab "married mothers"
+		else if `s' == 3 local s_lab "married fathers"
 
 		forvalues i = 1/3 {
 			local v_order = 1
 			foreach depvar in `depvars' {
+				if `i' == 3 	local covars 	`allcov_alt'
+				else  			local covars  	`allcov'
 
-				if inlist(`i', 2, 3) 	ivregress 2sls 	`depvar' 			`allcov' (cnum_mt2 = `instr`i''), 	r
-				else  					reg  			`depvar' cnum_mt2 	`allcov',							r
+				if inlist(`i', 2, 3) 	ivregress 2sls 	`depvar' 			`covars' (cnum_mt2 = `instr`i''), 	r
+				else  					reg  			`depvar' cnum_mt2 	`covars',							r
 
-				local est : di %7.4f `=_b[cnum_mt2]'
-				local se : 	di %7.4f `=_se[cnum_mt2]'	
+				if inlist("`depvar'", "incwage") {
+					local est : di %6.2f `=_b[cnum_mt2]'
+					local se : 	di %6.2f `=_se[cnum_mt2]'
+				}
+				else {
+					local est : di %5.3f `=_b[cnum_mt2]'
+					local se : 	di %5.3f `=_se[cnum_mt2]'
+				}
 
 				local est_form "`est' `=char(13)' (`se')"
 				post `memhold' ("`depvar'") ("`s_lab'") (`i') (`v_order') ("`est_form'")
@@ -554,7 +592,12 @@ preserve
 	label variable est1married_mothers "Married mothers, `=char(13)' OLS"
 	label variable est2married_mothers "Married mothers, `=char(13)' IV Same sex"
 	label variable est3married_mothers "Married mothers, `=char(13)' IV Two boys, two girls"
-	
+
+	label variable est1married_fathers "Married fathers, `=char(13)' OLS"
+	label variable est2married_fathers "Married fathers, `=char(13)' IV Same sex"
+	label variable est3married_fathers "Married fathers, `=char(13)' IV Two boys, two girls"
+		
+	order varname est?all*_mothers est?*married_mothers est?*married_fathers
 	export excel using "${out}/table_results.xlsx", sheet("table 7") sheetreplace firstrow(varlabels) keepcellfmt
 restore
 
