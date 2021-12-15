@@ -85,6 +85,7 @@ assert	 	uhrswork == 0 if wkpay_lyr == 0
 clonevar 	incwage_orig = incwage
 replace	 	incwage = 0 if wkpay_lyr == 0
 replace 	incwage = 2.099173554 * incwage_orig
+assert mi(incwage) == mi(wkpay_lyr)
 
 * family income (family income in year prior to census, in 1995 dollars)
 * ftotinc
@@ -162,7 +163,7 @@ restore
 * Filter for father
 preserve 
 	keep if sploc != 0 & sex == 1
-	keep serial sploc sex age birthqtr qsex qage qbirthmo age_qtr `outcome_vars'
+	keep serial sploc sex age birthqtr r_black r_oth hisp qsex qage qbirthmo age_qtr `outcome_vars'
 
 	ren * *_father
 	ren (sploc_father serial_father) (pernum serial)
@@ -175,7 +176,7 @@ restore
 count 
 
 * merge back onto the original data fileusing serial and pernum
-merge 1:1 serial pernum using "`momloc_data'", nogen 	keep(3) assert(1 3) // merge to children
+merge 1:1 serial pernum using "`momloc_data'", nogen 	keep(3) 	assert(1 3) // merge to children
 merge 1:1 serial pernum using "`sploc_data'", 			keep(1 3) // merge to fathers
 
 ren _merge _father_merge
@@ -352,11 +353,11 @@ preserve
 	save 		"`sample2'", replace
 	save 		"${out}/sample2", replace
 
-	* create father sample
-	drop `outcome_vars' sex age birthqtr qsex qage qbirthmo age_qtr age_fbirth
+	* create father sample 
+	drop `outcome_vars' sex age birthqtr qsex qage qbirthmo age_qtr age_fbirth r_black r_oth hisp
 	ren (*_father) 	(*)
-	keep serial `outcome_vars' sex age birthqtr qsex qage qbirthmo age_qtr age_fbirth cnum_mt2 ///
-								f_boy s_boy twoboys twogirls samesex r_black hisp r_oth
+	keep serial `outcome_vars' 	sex age birthqtr qsex qage qbirthmo age_qtr age_fbirth r_black r_oth hisp ///
+								cnum_mt2 f_boy s_boy twoboys twogirls samesex
 	assert sex == 1
 
 	tempfile 	sample3
