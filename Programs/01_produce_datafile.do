@@ -43,23 +43,21 @@ assert age_qtr < 1 if age == 0
 *---------------------------------------------------------------------------------------------------
 * Initial constructs
 *---------------------------------------------------------------------------------------------------
-* other is not black, not hispanic, and not white
-* black can include non-hispanic
-
 * Race and ethnicity
-* indicator for Black
+* indicator for race = Black, does not exclude hispanic
 tablist race, sort(v) 
 gen 	r_black = 	(race == 3) if !mi(race) 
 tablist r_black 	 race, sort(v) ab(30) clean
 
+* indicator for Hispanic
 gen 	hisp = (inlist(hispan, 1, 2, 3, 4) | race == 2) if !mi(hispan)
-*gen 	hisp = (race == 2) if !mi(race)
 tablist hisp hispan race, sort(v) ab(30)
 
+* other race is: not Black, not Hispanic, and not white
 gen 	r_oth = (inrange(race, 4, 13)) & hisp != 1 if !mi(race)
 tablist r_oth		 race, sort(v) ab(30) clean
 
-* chcek race variables
+* check race and ethnicity variables
 tablist r_black hisp r_oth race, sort(v) ab(30) clean
 
 * labor variables
@@ -80,9 +78,11 @@ assert	 	uhrswork == 0 if wkpay_lyr == 0
 
 * labor income (labor earnings in year prior to census, in 1995 dollars)
 * replace with 0 for all labor variables
-*replace negative values with 0!!
+* test: replace negative values with 0!!
+
 * incwage
 clonevar 	incwage_orig = incwage
+assert 		incwage >= 0
 replace	 	incwage = 0 if wkpay_lyr == 0
 replace 	incwage = 2.099173554 * incwage_orig
 assert mi(incwage) == mi(wkpay_lyr)
@@ -92,8 +92,11 @@ assert mi(incwage) == mi(wkpay_lyr)
 clonevar 	ftotinc_orig = ftotinc
 replace 	ftotinc = 2.099173554 * ftotinc_orig
 
+count if ftotinc < 0 // I think they only do replacement for log transformations
+
 * non-wife income (family income minus wife's labor income, in 1995 dollars)
 gen nonwinc = ftotinc - incwage
+count if nonwinc < 0 // I think they only do replacement for log transformations
 
 * replace 0 and negative values with 1
 clonevar ftotinc_temp = ftotinc
@@ -116,12 +119,15 @@ preserve
 
 	keep if momloc != 0 // filter to respondent who has a mother in sample
 
-	gen birthyr = 1980 - age
+	* census is April 1st
+	* if born in Q1 and age 10, birth year is 1970
+	* if born in Q3 and age 10, birth year is 1969
+	gen 	birthyr = .
+	replace birthyr = 1980 - age 		if birthqtr == 1
+	replace birthyr = 1980 - age - 1 	if birthqtr != 1
 
-	* reverse order, oldest (= first child) should be first
-	*bysort serial momloc (age_qtr): gen sort_order = _n
-	*bysort serial momloc (age_qtr): gen child_order = (_N - _n) + 1
-	
+
+	* reverse order, oldest (= first child) should be first	
 	bysort serial momloc (birthyr birthqtr): gen child_order = _n
 	sum child_order
 	drop birthyr
@@ -134,23 +140,16 @@ preserve
 	* sex of their two oldest children
 	* were not allocated by the US Census Bureau
 
-	* drop all the flags equal to 1???
+	* drop all the flags equal to 1
+	* need to include birthmo to improve estimates
 	* angrist and evans don't use observations with flagged or allocated values
-	/*
 	keep if (qsex1 == 0 & /// 
 			 qsex2 == 0 & ///
 			 qage1 == 0 & /// 
 			 qage2 == 0 & ///
-			 qbirthmo1 == 0 & qbirthmo2 == 0) //& qage1 == 0 & & qage2 == 0 &)
-	*/
+			 qbirthmo1 == 0 & ///
+			 qbirthmo2 == 0)
 
-	keep if qsex1 == 0
-	keep if qsex2 == 0
-	keep if qage1 == 0
-	keep if qage2 == 0
-	keep if qbirthmo1 == 0
-	keep if qbirthmo2 == 0
-	* if I don't use qbirthmo, I get too high of an estimate?
 
 	ren momloc pernum // rename for merging later
 	isid serial pernum
@@ -198,15 +197,17 @@ isid serial pernum // check uniquenesss
 
 * generate indicator for mother
 tablist 	sex, sort(v) ab(30) clean
-assert  	sex == 2
+assert  	sex == 2 // check this is true, only women
 
 * generate indicators for number of children
-* create match variable
+* need to recode chborn and rmeove 1
 clonevar 	chborn_orig = chborn
 replace  	chborn = chborn - 1
 
+* compare original to new variable
 label drop us80a_chbornlbl
 tablist chborn chborn_orig, sort(v) ab(30) clean
+assert mi(chborn) == mi(chborn_orig) // no new missing variables
 
 * women aged 21-35 and aged 36-50
 gen age_21_35 = inrange(age, 21, 35)
@@ -217,26 +218,30 @@ tablist age_21_35 age_36_50 age, sort(v) ab(30) clean
 * we deleted any mother for whom the number of children in the household did not match
 * the number of children ever born
 assert chborn_orig != 0 // not in universe
-*assert chborn_orig != 1 // has 0 children
 replace chborn = 9 if inrange(chborn, 9, 12) // need to fix, coding does not line up
  
-count 	if nchild != chborn
+count 	if nchild != chborn // note: already recoded chborn to remove 1
 drop 	if nchild != chborn
 
 * all women with two or more children
 * compare accuracy of construct produced with chborn
 egen 	count_child = rownonmiss(sex1 	sex2 	sex3 	sex4 	sex5 	sex6 	sex7 	sex8 	sex9 	sex10 ///
 								 sex11 	sex12 	sex13	sex14 	sex15 	sex16 	sex17)
-*gen 	cnum_mte2_test = count_child >= 2
-* these actually don't match in all cases
-*tablist cnum_mte2 cnum_mte2_test, sort(v) ab(30) clean // compare accuracy of variable
 
 * indicators for number of children
-gen cnum_2 = (count_child == 2) 	if !mi(count_child)
-gen cnum_mt2 = 	count_child > 2	if !mi(count_child)
-gen cnum_mte2 = count_child >= 2	if !mi(count_child)
+* using the actual count of children, not the version provided in chborn
+gen cnum_2 = (nchild == 2) 	if !mi(nchild)
+gen cnum_mt2 = 	nchild > 2	if !mi(nchild)
+gen cnum_mte2 = nchild >= 2	if !mi(nchild)
 
-tablist count_child chborn cnum_2 cnum_mt2 cnum_mte2, sort(v) ab(30) clean
+* from appendix A of additional paper
+* when the number of children ever born was 0, we assign 0
+* regardless of the number of kids in the household
+tablist nchild chborn cnum_2 cnum_mt2 cnum_mte2, sort(v) ab(30) clean
+
+* these actually don't match in all cases
+gen 	cnum_mte2_test = count_child >= 2
+tablist cnum_mte2 cnum_mte2_test chborn nchild, sort(v) ab(30) clean // compare accuracy of variable
 
 label variable cnum_2 		"Mother had two children"
 label variable cnum_mt2 	"Mother had more than two children"
@@ -245,10 +250,10 @@ label variable cnum_mte2 	"Mother had more than or equal to two children"
 * the sample is limited to mothers aged 21-35
 * whose oldest child was less than 18 years of age at the time of the census
 * except for women who's second child is less than 1 year old
-egen age_oldest = 	rowmax(age? age??)
-assert age_oldest == age1 // check this is true
+egen 	age_oldest = 	rowmax(age? age??)
+assert 	age_oldest == age1 // check this is true, should hold if coded correctly
 
-egen age_youngest = rowmin(age? age??)
+egen 	age_youngest = rowmin(age? age??)
 label variable age_oldest 	"Age of mother's oldest child"
 label variable age_youngest "Age of mother's youngest child"
 
@@ -287,27 +292,33 @@ gen twins = (age2 == age3) & (birthqtr2 == birthqtr3)
 label variable twins "Second and third children aretwins"
 
 * age at first birth
-/*
-gen age_fbirth = (age_qtr - age_oldest_qtr)
-label variable age_fbirth "Age at first birth"
+* use cases to identify mother and father age at first birth
+* need to account for birth quarter to improve precision
+gen 	age_fbirth = age - age_oldest 			if birthqtr <= 	birthqtr1
+replace age_fbirth = age - age_oldest - 1		if birthqtr > 	birthqtr1
+label variable age_fbirth "Age at first birth (mother)"
 
-gen age_fbirth_father = (age_qtr_father - age_oldest_qtr)
-label variable age_fbirth_father "Age at first birth (father"
-*/
-gen 	age_fbirth = age - age_oldest 		if birthqtr <= 	birthqtr1
-replace age_fbirth = age - age_oldest - 1 	if birthqtr > 	birthqtr1
+tablist age_fbirth age age_oldest, sort(v) ab(30) clean
 
 gen 	age_fbirth_father = age_father - age_oldest 		if birthqtr_father <= birthqtr1
 replace age_fbirth_father = age_father - age_oldest - 1 	if birthqtr_father > birthqtr1
 label variable age_fbirth_father "Age at first birth (father)"
 
-tablist age_fbirth, sort(v) ab(30) clean
+tablist age_fbirth_father age_father age_oldest, sort(v) ab(30) clean
 
 *---------------------------------------------------------------------------------------------------
 * FILTER FOR SAMPLE 1 (all mothers), SAMPLE 2 (married mothers), and SAMPLE 3 (married fathers)
 *---------------------------------------------------------------------------------------------------
-keep if age_21_35 == 1 & cnum_mte2 == 1 & age2 >= 1 & !mi(age2) & age_oldest < 18 
-*keep if inrange(age_qtr, 21, 35.75) & age_oldest < 18 & cnum_mte2 == 1 & age_qtr2 >= 1
+* sample conditions
+* women ages 21 - 35
+* more than or equal to 2 children
+* age of oldest child is less than 18
+* exclude women with second children who are less than 1
+keep if age_21_35 == 1 & cnum_mte2 == 1 & age_oldest < 18
+assert age1 >= age2
+assert !mi(age1) & !mi(age2)
+drop if age2 < 1
+assert age_fbirth >= 0
 
 * the first includes all women with two kids or more children
 * age of first child must be greater than or equal to 1
@@ -319,21 +330,9 @@ save 		"${out}/sample1", replace
 
 preserve 
 	* the second includes only married women
-	* coules who were married at the time of the Census,
+	* couples who were married at the time of the Census,
 	* married only once
 	* and married at the time of their first birth
-	* length married = age - age married
-	* length married >= age of first child
-	*gen  	len_married = (age - agemarr)
-	*gen 	marr_fbirth = (len_married >= age_oldest)
-	*gen 	marr_fbirth = (age - age_oldest) >= agemarr
-
-	*gen marrfrac = 1 - (marrqtr/4)
-	*gen agemarr_qtr = agemarr + marrfrac
-
-	* gte
-	*gen  	marr_fbirth = (age_qtr - age_oldest_qtr) >= agemarr_qtr
-	
 	gen 	marr_fbirth = 1 if (agemarr == 	age_fbirth 	& marrqtr <= 	birthqtr)
 	replace marr_fbirth = 1 if (agemarr < 	age_fbirth)
 	replace marr_fbirth = 0 if (agemarr == 	age_fbirth 	& marrqtr > 	birthqtr)
@@ -353,7 +352,8 @@ preserve
 	save 		"`sample2'", replace
 	save 		"${out}/sample2", replace
 
-	* create father sample 
+	* create father sample, use father-specific covariates
+	* need to drop and then rename variables for use
 	drop `outcome_vars' sex age birthqtr qsex qage qbirthmo age_qtr age_fbirth r_black r_oth hisp
 	ren (*_father) 	(*)
 	keep serial `outcome_vars' 	sex age birthqtr qsex qage qbirthmo age_qtr age_fbirth r_black r_oth hisp ///
@@ -423,6 +423,8 @@ preserve
 	label variable meanmarried_fathers 	"Married fathers"
 	order varname meanall_mothers meanmarried_mothers meanmarried_fathers
 
+	* display table 2 before exporting
+	list *
 	export excel using "${out}/table_results.xlsx", sheet("table 2") sheetreplace firstrow(varlabels) keepcellfmt
 restore 
 
@@ -498,9 +500,12 @@ preserve
 	label variable est2married_mothers "Married mothers, `=char(13)' OLS"
 	label variable est3married_mothers "Married mothers, `=char(13)' OLS"
 	
+	* display table 6 before exporting
+	list *
 	export excel using "${out}/table_results.xlsx", sheet("table 6") sheetreplace firstrow(varlabels) keepcellfmt
 restore
 
+* Use outreg for comparison
 * Other covariates are: age, age at first birth, black, hispanic, and other race
 * Boy 2nd
 * (1)
@@ -599,58 +604,11 @@ preserve
 	label variable est3married_fathers "Married fathers, `=char(13)' IV Two boys, two girls"
 		
 	order varname est?all*_mothers est?*married_mothers est?*married_fathers
+
+	* display table 7 before exporting
+	list *
 	export excel using "${out}/table_results.xlsx", sheet("table 7") sheetreplace firstrow(varlabels) keepcellfmt
 restore
-
-
-
-/*
-NOTES
-***************************************************************
-* LINKING CHILDREN TO MOTHERS
-* Households with one family
-
-* linking mother and children
-* if a woman was reported having given birth was designated as the householder
-* or the spouse of another householder, we attached all people in the household
-* labeled as child in the primary relationship code
-tablist us80a_relate, sort(v)
-
-gen hh_female = (inlist(us80a_relate, 101, 201) & sex == 2)
-tablist hh_female us80a_relate if sex == 2, sort(v) ab(30)
-
-gen child_ind = (us80a_relate == 301)
-tablist child_ind us80a_relate, sort(v) ab(30) clean
-
-* count children only if mother has ever had children
-replace child_ind = . if !(hh_female == 1 & chborn > 0 & chborn < 99 & us80a_nfams == 1)
-
-* in households with multiple families, we used detailed
-* realtionsihp codes as well as subfamily numbers to pair 
-* children with mothers
-* if the woman who reported having given birth was a child of
-* the householder, we attached all grandchildren of teh householder
-* sharing the same subfamily codes to the woman who reported
-* having the child, identifying her as the mother
-
-
-* delete any mother for whom the number of children does
-* in the household does not match the number of children ever born
-
-* note: the sample is restricted to women for whom the reported
-* values of age and sex of their two oldest children
-* were not allocated by the US Bureau of the Census
-
-* generate age in quarters 
-gen 	ageqtr = 4*age
-replace ageqtr = ageqtr - birthqtr
-
-gen 	ageqtr_mar = 4*agemarr
-replace ageqtr_mar = ageqtr_mar - marrqtr
-
-tablist ageqtr age birthqtr, sort(v) ab(30)
-
-*/
 
 log close _all
 
