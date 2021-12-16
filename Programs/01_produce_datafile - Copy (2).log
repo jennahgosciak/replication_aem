@@ -2,7 +2,7 @@
       name:  <unnamed>
        log:  C:\Users\Jennah\Desktop\Code\replication_aem/Programs/01_produce_datafile.log
   log type:  text
- opened on:  15 Dec 2021, 22:12:15
+ opened on:  15 Dec 2021, 22:07:50
 
 . 
 . *---------------------------------------------------------------------------------------------------
@@ -896,8 +896,8 @@ xij variables:
 .         tempfile        momloc_data
 
 .         save            "`momloc_data'", replace
-(file C:\Users\Jennah\AppData\Local\Temp\ST_da8c_000002.tmp not found)
-file C:\Users\Jennah\AppData\Local\Temp\ST_da8c_000002.tmp saved as .dta format
+(file C:\Users\Jennah\AppData\Local\Temp\ST_10938_000002.tmp not found)
+file C:\Users\Jennah\AppData\Local\Temp\ST_10938_000002.tmp saved as .dta format
 
 . restore 
 
@@ -921,8 +921,8 @@ file C:\Users\Jennah\AppData\Local\Temp\ST_da8c_000002.tmp saved as .dta format
 .         tempfile        sploc_data
 
 .         save            "`sploc_data'", replace
-(file C:\Users\Jennah\AppData\Local\Temp\ST_da8c_000004.tmp not found)
-file C:\Users\Jennah\AppData\Local\Temp\ST_da8c_000004.tmp saved as .dta format
+(file C:\Users\Jennah\AppData\Local\Temp\ST_10938_000004.tmp not found)
+file C:\Users\Jennah\AppData\Local\Temp\ST_10938_000004.tmp saved as .dta format
 
 . restore 
 
@@ -1370,8 +1370,8 @@ file C:\Users\Jennah\Desktop\Code\replication_aem/Output/merged_data.dta saved
 . tempfile        sample1 
 
 . save            "`sample1'", replace
-(file C:\Users\Jennah\AppData\Local\Temp\ST_da8c_000005.tmp not found)
-file C:\Users\Jennah\AppData\Local\Temp\ST_da8c_000005.tmp saved as .dta format
+(file C:\Users\Jennah\AppData\Local\Temp\ST_10938_000005.tmp not found)
+file C:\Users\Jennah\AppData\Local\Temp\ST_10938_000005.tmp saved as .dta format
 
 . save            "${out}/sample1", replace
 file C:\Users\Jennah\Desktop\Code\replication_aem/Output/sample1.dta saved
@@ -8125,8 +8125,8 @@ file C:\Users\Jennah\Desktop\Code\replication_aem/Output/sample1.dta saved
 .         tempfile        sample2
 
 .         save            "`sample2'", replace
-(file C:\Users\Jennah\AppData\Local\Temp\ST_da8c_000007.tmp not found)
-file C:\Users\Jennah\AppData\Local\Temp\ST_da8c_000007.tmp saved as .dta format
+(file C:\Users\Jennah\AppData\Local\Temp\ST_10938_000007.tmp not found)
+file C:\Users\Jennah\AppData\Local\Temp\ST_10938_000007.tmp saved as .dta format
 
 .         save            "${out}/sample2", replace
 file C:\Users\Jennah\Desktop\Code\replication_aem/Output/sample2.dta saved
@@ -8147,8 +8147,8 @@ file C:\Users\Jennah\Desktop\Code\replication_aem/Output/sample2.dta saved
 .         tempfile        sample3
 
 .         save            "`sample3'", replace
-(file C:\Users\Jennah\AppData\Local\Temp\ST_da8c_000008.tmp not found)
-file C:\Users\Jennah\AppData\Local\Temp\ST_da8c_000008.tmp saved as .dta format
+(file C:\Users\Jennah\AppData\Local\Temp\ST_10938_000008.tmp not found)
+file C:\Users\Jennah\AppData\Local\Temp\ST_10938_000008.tmp saved as .dta format
 
 .         save            "${out}/sample3", replace
 file C:\Users\Jennah\Desktop\Code\replication_aem/Output/sample3.dta saved
@@ -8166,7 +8166,7 @@ file C:\Users\Jennah\Desktop\Code\replication_aem/Output/sample3.dta saved
 . 
 . postfile `memhold' str30(varname sample mean) double(N order) ///
 >         using `tbl2', replace
-(file C:\Users\Jennah\AppData\Local\Temp\ST_da8c_000009.tmp not found)
+(file C:\Users\Jennah\AppData\Local\Temp\ST_10938_000009.tmp not found)
 
 . 
 . forvalues s = 1/3 {
@@ -8475,7 +8475,7 @@ file C:\Users\Jennah\Desktop\Code\replication_aem/Output/table_results.xlsx save
 . 
 . postfile `memhold' str30(varname sample) double(model order) str30(est) ///
 >         using `tbl6', replace
-(file C:\Users\Jennah\AppData\Local\Temp\ST_da8c_00000e.tmp not found)
+(file C:\Users\Jennah\AppData\Local\Temp\ST_10938_00000e.tmp not found)
 
 . 
 . forvalues s = 1/2 {
@@ -8980,7 +8980,7 @@ dir : seeout
 . 
 . postfile `memhold' str30(varname sample) double(model order) str30(est) ///
 >         using `tbl7', replace
-(file C:\Users\Jennah\AppData\Local\Temp\ST_da8c_00000i.tmp not found)
+(file C:\Users\Jennah\AppData\Local\Temp\ST_10938_00000i.tmp not found)
 
 . 
 . forvalues s = 1/3 {
@@ -10369,5 +10369,5 @@ file C:\Users\Jennah\Desktop\Code\replication_aem/Output/table_results.xlsx save
       name:  <unnamed>
        log:  C:\Users\Jennah\Desktop\Code\replication_aem/Programs/01_produce_datafile.log
   log type:  text
- closed on:  15 Dec 2021, 22:17:32
+ closed on:  15 Dec 2021, 22:11:52
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

@@ -6,6 +6,7 @@ set more off
 set varabbrev off
 set type double
 pause on
+set seed 2021
 
 * define path to data
 global root "C:\Users\Jennah\Desktop\Code\replication_aem"
@@ -129,16 +130,18 @@ preserve
 	replace birthyr = 1980 - age 		if birthqtr == 1
 	replace birthyr = 1980 - age - 1 	if birthqtr != 1
 
+	gen ties = runiform() // break ties in same way each time 
+
 	tablist birthyr age birthqtr, sort(v) ab(30) clean
 
 	* reverse order, oldest (= first child) should be first	
-	bysort serial momloc (birthyr birthqtr): gen child_order = _n
+	bysort serial momloc (birthyr birthqtr ties): gen child_order = _n
 	sum child_order, d
 
-	tablist child_order age 	birthqtr, sort(v) ab(30) clean
-	tablist child_order birthyr birthqtr, sort(v) ab(30) clean
+	tablist child_order age 	birthqtr if (runiform() < 25/_N), sort(v) ab(30) clean
+	tablist child_order birthyr birthqtr if (runiform() < 25/_N), sort(v) ab(30) clean
 	
-	drop birthyr
+	drop birthyr ties
 	reshape wide sex age age_qtr birthqtr qsex qage qbirthmo, i(serial momloc) j(child_order)
 
 	* restricted to women for whom the reported values of age and 
