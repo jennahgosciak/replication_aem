@@ -17,7 +17,7 @@ global out  "${root}/Output"
 global data  "raw pums80 slim.dta"
 
 * define log file
-log using "${prog}/01_produce_datafile.log", replace text
+*log using "${prog}/01_produce_datafile.log", replace text
 
 *---------------------------------------------------------------------------------------------------
 *  Course: 	Advanced Empirical Methods
@@ -50,12 +50,12 @@ gen 	r_black = 	(race == 3) if !mi(race)
 tablist r_black 	 race, sort(v) ab(30) clean
 
 * indicator for Hispanic
-gen 	hisp = (inlist(hispan, 1, 2, 3, 4) | race == 2) if !mi(hispan)
+gen 	hisp = (inlist(hispan, 1, 2, 3, 4) | race == 2) if !mi(hispan) // 
 tablist hisp hispan race, sort(v) ab(30)
 
 * other race is: not Black, not Hispanic, and not white
 gen 	r_oth = (inrange(race, 4, 13)) & hisp != 1 if !mi(race)
-tablist r_oth		 race, sort(v) ab(30) clean
+tablist r_oth hispan race, sort(v) ab(30) clean
 
 * check race and ethnicity variables
 tablist r_black hisp r_oth race, sort(v) ab(30) clean
@@ -126,14 +126,16 @@ preserve
 	replace birthyr = 1980 - age 		if birthqtr == 1
 	replace birthyr = 1980 - age - 1 	if birthqtr != 1
 
+	tablist birthyr age birthqtr, sort(v) ab(30) clean
 
 	* reverse order, oldest (= first child) should be first	
 	bysort serial momloc (birthyr birthqtr): gen child_order = _n
 	sum child_order
+
+	tablist child_order age 	birthqtr, sort(v) ab(30) clean
+	tablist child_order birthyr birthqtr, sort(v) ab(30) clean
+	
 	drop birthyr
-
-	*tablist child_order sort_order, sort(v) ab(30) clean
-
 	reshape wide sex age age_qtr birthqtr qsex qage qbirthmo, i(serial momloc) j(child_order)
 
 	* restricted to women for whom the reported values of age and 
@@ -298,13 +300,13 @@ gen 	age_fbirth = age - age_oldest 			if birthqtr <= 	birthqtr1
 replace age_fbirth = age - age_oldest - 1		if birthqtr > 	birthqtr1
 label variable age_fbirth "Age at first birth (mother)"
 
-tablist age_fbirth age age_oldest, sort(v) ab(30) clean
+tablist age_fbirth age age_oldest 				if (runiform() < 25/_N), sort(v) ab(30) clean
 
 gen 	age_fbirth_father = age_father - age_oldest 		if birthqtr_father <= birthqtr1
 replace age_fbirth_father = age_father - age_oldest - 1 	if birthqtr_father > birthqtr1
 label variable age_fbirth_father "Age at first birth (father)"
 
-tablist age_fbirth_father age_father age_oldest, sort(v) ab(30) clean
+tablist age_fbirth_father age_father age_oldest if (runiform() < 25/_N), sort(v) ab(30) clean
 
 *---------------------------------------------------------------------------------------------------
 * FILTER FOR SAMPLE 1 (all mothers), SAMPLE 2 (married mothers), and SAMPLE 3 (married fathers)
@@ -513,20 +515,20 @@ use "${out}/sample1", clear
 reg cnum_mt2 samesex, r 
 outreg2 using "${out}/table_2", keep(samesex) excel ctitle(OLS - no covar) replace
 
-reg cnum_mt2 f_boy s_boy samesex 						i.age i.age_fbirth r_black hisp r_oth, r
+reg cnum_mt2 f_boy s_boy samesex 						age age_fbirth r_black hisp r_oth, r
 outreg2 using "${out}/table_2", keep(f_boy s_boy samesex) excel ctitle(OLS) append
 
-reg cnum_mt2 f_boy 					twoboys twogirls 	i.age i.age_fbirth r_black hisp r_oth, r
+reg cnum_mt2 f_boy 					twoboys twogirls 	age age_fbirth r_black hisp r_oth, r
 outreg2 using "${out}/table_2", keep(f_boy s_boy twoboys twogirls) excel ctitle(OLS) append
 
 use "${out}/sample2", clear
 reg cnum_mt2 samesex, r 
 outreg2 using "${out}/table_2", keep(samesex) excel ctitle(OLS - no covar) append
 
-reg cnum_mt2 f_boy s_boy samesex 						i.age i.age_fbirth r_black hisp r_oth, r
+reg cnum_mt2 f_boy s_boy samesex 						age age_fbirth r_black hisp r_oth, r
 outreg2 using "${out}/table_2", keep(f_boy s_boy samesex) excel ctitle(OLS) append
 
-reg cnum_mt2 f_boy 					twoboys twogirls 	i.age i.age_fbirth r_black hisp r_oth, r
+reg cnum_mt2 f_boy 					twoboys twogirls 	age age_fbirth r_black hisp r_oth, r
 outreg2 using "${out}/table_2", keep(f_boy s_boy twoboys twogirls) excel ctitle(OLS) append
 
 *---------------------------------------------------------------------------------------------------
