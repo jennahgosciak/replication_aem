@@ -17,7 +17,7 @@ global out  "${root}/Output"
 global data  "raw pums80 slim.dta"
 
 * define log file
-*log using "${prog}/01_produce_datafile.log", replace text
+log using "${prog}/01_produce_datafile.log", replace text
 
 *---------------------------------------------------------------------------------------------------
 *  Course: 	Advanced Empirical Methods
@@ -50,10 +50,13 @@ gen 	r_black = 	(race == 3) if !mi(race)
 tablist r_black 	 race, sort(v) ab(30) clean
 
 * indicator for Hispanic
-gen 	hisp = (inlist(hispan, 1, 2, 3, 4) | race == 2) if !mi(hispan) // 
+gen 	hisp = (inlist(hispan, 1, 2, 3, 4) | race == 2) if !mi(hispan)
 tablist hisp hispan race, sort(v) ab(30)
 
 * other race is: not Black, not Hispanic, and not white
+* 1 = white
+* 2 = Spanish, write-in
+* 3 = Black
 gen 	r_oth = (inrange(race, 4, 13)) & hisp != 1 if !mi(race)
 tablist r_oth hispan race, sort(v) ab(30) clean
 
@@ -120,8 +123,8 @@ preserve
 	keep if momloc != 0 // filter to respondent who has a mother in sample
 
 	* census is April 1st
-	* if born in Q1 and age 10, birth year is 1970
-	* if born in Q3 and age 10, birth year is 1969
+	* Ex. if born in Q1 and age 10, birth year is 1970
+	* Ex. if born in Q2, Q3, or Q4 and age 10, birth year is 1969
 	gen 	birthyr = .
 	replace birthyr = 1980 - age 		if birthqtr == 1
 	replace birthyr = 1980 - age - 1 	if birthqtr != 1
@@ -130,7 +133,7 @@ preserve
 
 	* reverse order, oldest (= first child) should be first	
 	bysort serial momloc (birthyr birthqtr): gen child_order = _n
-	sum child_order
+	sum child_order, d
 
 	tablist child_order age 	birthqtr, sort(v) ab(30) clean
 	tablist child_order birthyr birthqtr, sort(v) ab(30) clean
