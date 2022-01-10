@@ -1,7 +1,7 @@
 capture log close _all
 clear all
 version 17
-set linesize 250
+set linesize 255
 set more off
 set varabbrev off
 set type double
@@ -112,7 +112,7 @@ replace  nonwinc_temp = 1 if nonwinc_temp <= 0
 gen l_ftotinc = ln(ftotinc_temp) // log transform variables
 gen l_nonwinc = ln(nonwinc_temp)
 
-local outcome_vars wkpay_lyr uhrswork wkswork1 incwage ftotinc l_ftotinc l_nonwinc 
+local outcome_vars wkpay_lyr wkswork1 uhrswork incwage ftotinc l_ftotinc l_nonwinc 
 
 *---------------------------------------------------------------------------------------------------
 * RESHAPE DATA
@@ -194,8 +194,6 @@ save "${out}/merged_data", replace
 *---------------------------------------------------------------------------------------------------
 * PRODUCE CONSTRUCTS
 *---------------------------------------------------------------------------------------------------
-local outcome_vars wkpay_lyr uhrswork wkswork1 incwage ftotinc l_ftotinc l_nonwinc 
-
 use "${out}/merged_data", clear
 isid serial pernum // check uniquenesss
 
@@ -393,7 +391,7 @@ forvalues s = 1/3 {
 		local sort_order = 0
 		foreach var in 	chborn 		cnum_mt2 	f_boy 		s_boy 		twoboys twogirls ///
 						samesex 	twins 		age 		age_fbirth 	wkpay_lyr ///
-						uhrswork 	wkswork1 	incwage	 	ftotinc 	nonwinc {
+						wkswork1 	uhrswork 	incwage	 	ftotinc 	nonwinc {
 			local sort_order = `sort_order' + 1 // increment
 
 			cap confirm variable `var'
@@ -432,7 +430,7 @@ preserve
 	order varname meanall_mothers meanmarried_mothers meanmarried_fathers
 
 	* display table 2 before exporting
-	list *
+	list *, ab(8)
 	export excel using "${out}/table_results.xlsx", sheet("table 2") sheetreplace firstrow(varlabels) keepcellfmt
 restore 
 
@@ -509,7 +507,7 @@ preserve
 	label variable est3married_mothers "Married mothers, `=char(13)' OLS"
 	
 	* display table 6 before exporting
-	list *
+	list *, ab(8)
 	export excel using "${out}/table_results.xlsx", sheet("table 6") sheetreplace firstrow(varlabels) keepcellfmt
 restore
 
@@ -566,8 +564,8 @@ forvalues s = 1/3 {
 				if `i' == 3 	local covars 	`allcov_alt'
 				else  			local covars  	`allcov'
 
-				if inlist(`i', 2, 3) 	ivregress 2sls 	`depvar' 			`covars' (cnum_mt2 = `instr`i''), 	r
-				else  					reg  			`depvar' cnum_mt2 	`covars',							r
+				if inlist(`i', 2, 3) 	ivregress 2sls 	`depvar'   (cnum_mt2 = `instr`i'') 	`covars', 	r
+				else  					reg  			`depvar' 	cnum_mt2 				`covars',	r
 
 				if inlist("`depvar'", "incwage") {
 					local est : di %6.2f `=_b[cnum_mt2]'
@@ -614,7 +612,7 @@ preserve
 	order varname est?all*_mothers est?*married_mothers est?*married_fathers
 
 	* display table 7 before exporting
-	list *
+	list *, ab(8) linesize(255)
 	export excel using "${out}/table_results.xlsx", sheet("table 7") sheetreplace firstrow(varlabels) keepcellfmt
 restore
 

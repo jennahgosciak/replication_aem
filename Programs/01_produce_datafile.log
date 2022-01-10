@@ -1,8 +1,8 @@
-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       name:  <unnamed>
        log:  C:\Users\Jennah\Desktop\Code\replication_aem/Programs/01_produce_datafile.log
   log type:  text
- opened on:  15 Dec 2021, 22:12:15
+ opened on:  15 Dec 2021, 23:43:06
 
 . 
 . *---------------------------------------------------------------------------------------------------
@@ -408,7 +408,7 @@ variable ftotinc was long now double
 . gen l_nonwinc = ln(nonwinc_temp)
 
 . 
-. local outcome_vars wkpay_lyr uhrswork wkswork1 incwage ftotinc l_ftotinc l_nonwinc 
+. local outcome_vars wkpay_lyr wkswork1 uhrswork incwage ftotinc l_ftotinc l_nonwinc 
 
 . 
 . *---------------------------------------------------------------------------------------------------
@@ -896,8 +896,8 @@ xij variables:
 .         tempfile        momloc_data
 
 .         save            "`momloc_data'", replace
-(file C:\Users\Jennah\AppData\Local\Temp\ST_da8c_000002.tmp not found)
-file C:\Users\Jennah\AppData\Local\Temp\ST_da8c_000002.tmp saved as .dta format
+(file C:\Users\Jennah\AppData\Local\Temp\ST_1053c_000002.tmp not found)
+file C:\Users\Jennah\AppData\Local\Temp\ST_1053c_000002.tmp saved as .dta format
 
 . restore 
 
@@ -921,8 +921,8 @@ file C:\Users\Jennah\AppData\Local\Temp\ST_da8c_000002.tmp saved as .dta format
 .         tempfile        sploc_data
 
 .         save            "`sploc_data'", replace
-(file C:\Users\Jennah\AppData\Local\Temp\ST_da8c_000004.tmp not found)
-file C:\Users\Jennah\AppData\Local\Temp\ST_da8c_000004.tmp saved as .dta format
+(file C:\Users\Jennah\AppData\Local\Temp\ST_1053c_000004.tmp not found)
+file C:\Users\Jennah\AppData\Local\Temp\ST_1053c_000004.tmp saved as .dta format
 
 . restore 
 
@@ -981,9 +981,6 @@ file C:\Users\Jennah\Desktop\Code\replication_aem/Output/merged_data.dta saved
 . *---------------------------------------------------------------------------------------------------
 . * PRODUCE CONSTRUCTS
 . *---------------------------------------------------------------------------------------------------
-. local outcome_vars wkpay_lyr uhrswork wkswork1 incwage ftotinc l_ftotinc l_nonwinc 
-
-. 
 . use "${out}/merged_data", clear
 
 . isid serial pernum // check uniquenesss
@@ -1370,8 +1367,8 @@ file C:\Users\Jennah\Desktop\Code\replication_aem/Output/merged_data.dta saved
 . tempfile        sample1 
 
 . save            "`sample1'", replace
-(file C:\Users\Jennah\AppData\Local\Temp\ST_da8c_000005.tmp not found)
-file C:\Users\Jennah\AppData\Local\Temp\ST_da8c_000005.tmp saved as .dta format
+(file C:\Users\Jennah\AppData\Local\Temp\ST_1053c_000005.tmp not found)
+file C:\Users\Jennah\AppData\Local\Temp\ST_1053c_000005.tmp saved as .dta format
 
 . save            "${out}/sample1", replace
 file C:\Users\Jennah\Desktop\Code\replication_aem/Output/sample1.dta saved
@@ -8125,8 +8122,8 @@ file C:\Users\Jennah\Desktop\Code\replication_aem/Output/sample1.dta saved
 .         tempfile        sample2
 
 .         save            "`sample2'", replace
-(file C:\Users\Jennah\AppData\Local\Temp\ST_da8c_000007.tmp not found)
-file C:\Users\Jennah\AppData\Local\Temp\ST_da8c_000007.tmp saved as .dta format
+(file C:\Users\Jennah\AppData\Local\Temp\ST_1053c_000007.tmp not found)
+file C:\Users\Jennah\AppData\Local\Temp\ST_1053c_000007.tmp saved as .dta format
 
 .         save            "${out}/sample2", replace
 file C:\Users\Jennah\Desktop\Code\replication_aem/Output/sample2.dta saved
@@ -8147,8 +8144,8 @@ file C:\Users\Jennah\Desktop\Code\replication_aem/Output/sample2.dta saved
 .         tempfile        sample3
 
 .         save            "`sample3'", replace
-(file C:\Users\Jennah\AppData\Local\Temp\ST_da8c_000008.tmp not found)
-file C:\Users\Jennah\AppData\Local\Temp\ST_da8c_000008.tmp saved as .dta format
+(file C:\Users\Jennah\AppData\Local\Temp\ST_1053c_000008.tmp not found)
+file C:\Users\Jennah\AppData\Local\Temp\ST_1053c_000008.tmp saved as .dta format
 
 .         save            "${out}/sample3", replace
 file C:\Users\Jennah\Desktop\Code\replication_aem/Output/sample3.dta saved
@@ -8166,7 +8163,7 @@ file C:\Users\Jennah\Desktop\Code\replication_aem/Output/sample3.dta saved
 . 
 . postfile `memhold' str30(varname sample mean) double(N order) ///
 >         using `tbl2', replace
-(file C:\Users\Jennah\AppData\Local\Temp\ST_da8c_000009.tmp not found)
+(file C:\Users\Jennah\AppData\Local\Temp\ST_1053c_000009.tmp not found)
 
 . 
 . forvalues s = 1/3 {
@@ -8180,7 +8177,7 @@ file C:\Users\Jennah\Desktop\Code\replication_aem/Output/sample3.dta saved
 .                 local sort_order = 0
   8.                 foreach var in  chborn          cnum_mt2        f_boy           s_boy           twoboys twogirls ///
 >                                                 samesex         twins           age             age_fbirth      wkpay_lyr ///
->                                                 uhrswork        wkswork1        incwage         ftotinc         nonwinc {
+>                                                 wkswork1        uhrswork        incwage         ftotinc         nonwinc {
   9.                         local sort_order = `sort_order' + 1 // increment
  10. 
 .                         cap confirm variable `var'
@@ -8247,11 +8244,11 @@ file C:\Users\Jennah\Desktop\Code\replication_aem/Output/sample3.dta saved
 
     Variable |        Obs        Mean    Std. dev.       Min        Max
 -------------+---------------------------------------------------------
-    uhrswork |    393,424    18.69925    18.92722          0         99
+    wkswork1 |    393,424    20.58842    22.21778          0         52
 
     Variable |        Obs        Mean    Std. dev.       Min        Max
 -------------+---------------------------------------------------------
-    wkswork1 |    393,424    20.58842    22.21778          0         52
+    uhrswork |    393,424    18.69925    18.92722          0         99
 
     Variable |        Obs        Mean    Std. dev.       Min        Max
 -------------+---------------------------------------------------------
@@ -8311,11 +8308,11 @@ file C:\Users\Jennah\Desktop\Code\replication_aem/Output/sample3.dta saved
 
     Variable |        Obs        Mean    Std. dev.       Min        Max
 -------------+---------------------------------------------------------
-    uhrswork |    247,641    16.59709    18.33257          0         99
+    wkswork1 |    247,641    18.78872    21.78672          0         52
 
     Variable |        Obs        Mean    Std. dev.       Min        Max
 -------------+---------------------------------------------------------
-    wkswork1 |    247,641    18.78872    21.78672          0         52
+    uhrswork |    247,641    16.59709    18.33257          0         99
 
     Variable |        Obs        Mean    Std. dev.       Min        Max
 -------------+---------------------------------------------------------
@@ -8367,11 +8364,11 @@ file C:\Users\Jennah\Desktop\Code\replication_aem/Output/sample3.dta saved
 
     Variable |        Obs        Mean    Std. dev.       Min        Max
 -------------+---------------------------------------------------------
-    uhrswork |    247,641    43.45893    12.29707          0         99
+    wkswork1 |    247,641    47.92355     10.5399          0         52
 
     Variable |        Obs        Mean    Std. dev.       Min        Max
 -------------+---------------------------------------------------------
-    wkswork1 |    247,641    47.92355     10.5399          0         52
+    uhrswork |    247,641    43.45893    12.29707          0         99
 
     Variable |        Obs        Mean    Std. dev.       Min        Max
 -------------+---------------------------------------------------------
@@ -8423,7 +8420,7 @@ xij variables:
 
 . 
 .         * display table 2 before exporting
-.         list *
+.         list *, ab(8)
 
      +---------------------------------------------------------------------+
      |    varname    meanall_mothers   meanmarried_mo~s   meanmarried_fa~s |
@@ -8441,8 +8438,8 @@ xij variables:
  10. | age_fbirth    20.580 (3.113)    21.430 (2.981)    24.024 (4.044) |
      |---------------------------------------------------------------------|
  11. |  wkpay_lyr     0.562 (0.496)     0.525 (0.499)     0.977 (0.151) |
- 12. |   uhrswork   18.699 (18.927)   16.597 (18.333)   43.459 (12.297) |
- 13. |   wkswork1   20.588 (22.218)   18.789 (21.787)   47.924 (10.540) |
+ 12. |   wkswork1   20.588 (22.218)   18.789 (21.787)   47.924 (10.540) |
+ 13. |   uhrswork   18.699 (18.927)   16.597 (18.333)   43.459 (12.297) |
  14. |    incwage    6,838 (10,441)    5,933 ( 9,828)   35,623 (23,674) |
  15. |    ftotinc   41,986 (26,501)   47,383 (25,765)   47,383 (25,765) |
      |---------------------------------------------------------------------|
@@ -8475,7 +8472,7 @@ file C:\Users\Jennah\Desktop\Code\replication_aem/Output/table_results.xlsx save
 . 
 . postfile `memhold' str30(varname sample) double(model order) str30(est) ///
 >         using `tbl6', replace
-(file C:\Users\Jennah\AppData\Local\Temp\ST_da8c_00000e.tmp not found)
+(file C:\Users\Jennah\AppData\Local\Temp\ST_1053c_00000e.tmp not found)
 
 . 
 . forvalues s = 1/2 {
@@ -8771,25 +8768,95 @@ xij variables:
 
 .         
 .         * display table 6 before exporting
-.         list *
+.         list *, ab(8)
 
-     +----------------------------------------------------------------------------------------------------------------------------------------------------+
-     |    varname       est1all_mothers        est2all_mothers        est3all_mothers   est1married_mothers    est2married_mothers    est3married_mothers |
-     |----------------------------------------------------------------------------------------------------------------------------------------------------|
-  1. |      f_boy                         -0.0087*** (0.0015)   -0.0007*** (0.0021)                         -0.0115*** (0.0019)   -0.0017*** (0.0026) |
-  2. |      s_boy                         -0.0080*** (0.0015)                                                -0.0098*** (0.0019)                        |
-  3. |    samesex   0.0588*** (0.0016)    0.0602*** (0.0015)                          0.0672*** (0.0019)    0.0692*** (0.0019)                        |
-  4. |    twoboys                                                 0.0522*** (0.0021)                                                 0.0594*** (0.0026) |
-  5. |   twogirls                                                 0.0682*** (0.0021)                                                 0.0790*** (0.0027) |
-     |----------------------------------------------------------------------------------------------------------------------------------------------------|
-  6. |        age                          0.0319*** (0.0002)    0.0319*** (0.0002)                          0.0322*** (0.0003)    0.0322*** (0.0003) |
-  7. | age_fbirth                         -0.0444*** (0.0003)   -0.0444*** (0.0003)                         -0.0446*** (0.0003)   -0.0446*** (0.0003) |
-  8. |    r_black                          0.0833*** (0.0024)    0.0833*** (0.0024)                          0.0760*** (0.0043)    0.0760*** (0.0043) |
-  9. |       hisp                          0.1430*** (0.0028)    0.1430*** (0.0028)                          0.1467*** (0.0036)    0.1467*** (0.0036) |
- 10. |      r_oth                          0.0722*** (0.0048)    0.0722*** (0.0048)                          0.0603*** (0.0057)    0.0603*** (0.0057) |
-     |----------------------------------------------------------------------------------------------------------------------------------------------------|
- 11. |         r2                 0.004                  0.095                  0.095                 0.005                  0.091                  0.091 |
-     +----------------------------------------------------------------------------------------------------------------------------------------------------+
+     +-----------------------------------------------------------------------------------------------------------------------------+
+  1. |    varname |     est1all_mothers |      est2all_mothers |      est3all_mothers | est1married_mothers |  est2married_mothers |
+     |      f_boy |                     | -0.0087*** (0.0015) | -0.0007*** (0.0021) |                     | -0.0115*** (0.0019) |
+     |-----------------------------------------------------------------------------------------------------------------------------|
+     |                                                     est3married_mothers                                                     |
+     |                                                    -0.0017*** (0.0026)                                                     |
+     +-----------------------------------------------------------------------------------------------------------------------------+
+
+     +-----------------------------------------------------------------------------------------------------------------------------+
+  2. |    varname |     est1all_mothers |      est2all_mothers |      est3all_mothers | est1married_mothers |  est2married_mothers |
+     |      s_boy |                     | -0.0080*** (0.0015) |                      |                     | -0.0098*** (0.0019) |
+     |-----------------------------------------------------------------------------------------------------------------------------|
+     |                                                     est3married_mothers                                                     |
+     |                                                                                                                             |
+     +-----------------------------------------------------------------------------------------------------------------------------+
+
+     +-----------------------------------------------------------------------------------------------------------------------------+
+  3. |    varname |     est1all_mothers |      est2all_mothers |      est3all_mothers | est1married_mothers |  est2married_mothers |
+     |    samesex | 0.0588*** (0.0016) |  0.0602*** (0.0015) |                      | 0.0672*** (0.0019) |  0.0692*** (0.0019) |
+     |-----------------------------------------------------------------------------------------------------------------------------|
+     |                                                     est3married_mothers                                                     |
+     |                                                                                                                             |
+     +-----------------------------------------------------------------------------------------------------------------------------+
+
+     +-----------------------------------------------------------------------------------------------------------------------------+
+  4. |    varname |     est1all_mothers |      est2all_mothers |      est3all_mothers | est1married_mothers |  est2married_mothers |
+     |    twoboys |                     |                      |  0.0522*** (0.0021) |                     |                      |
+     |-----------------------------------------------------------------------------------------------------------------------------|
+     |                                                     est3married_mothers                                                     |
+     |                                                     0.0594*** (0.0026)                                                     |
+     +-----------------------------------------------------------------------------------------------------------------------------+
+
+     +-----------------------------------------------------------------------------------------------------------------------------+
+  5. |    varname |     est1all_mothers |      est2all_mothers |      est3all_mothers | est1married_mothers |  est2married_mothers |
+     |   twogirls |                     |                      |  0.0682*** (0.0021) |                     |                      |
+     |-----------------------------------------------------------------------------------------------------------------------------|
+     |                                                     est3married_mothers                                                     |
+     |                                                     0.0790*** (0.0027)                                                     |
+     +-----------------------------------------------------------------------------------------------------------------------------+
+
+     +-----------------------------------------------------------------------------------------------------------------------------+
+  6. |    varname |     est1all_mothers |      est2all_mothers |      est3all_mothers | est1married_mothers |  est2married_mothers |
+     |        age |                     |  0.0319*** (0.0002) |  0.0319*** (0.0002) |                     |  0.0322*** (0.0003) |
+     |-----------------------------------------------------------------------------------------------------------------------------|
+     |                                                     est3married_mothers                                                     |
+     |                                                     0.0322*** (0.0003)                                                     |
+     +-----------------------------------------------------------------------------------------------------------------------------+
+
+     +-----------------------------------------------------------------------------------------------------------------------------+
+  7. |    varname |     est1all_mothers |      est2all_mothers |      est3all_mothers | est1married_mothers |  est2married_mothers |
+     | age_fbirth |                     | -0.0444*** (0.0003) | -0.0444*** (0.0003) |                     | -0.0446*** (0.0003) |
+     |-----------------------------------------------------------------------------------------------------------------------------|
+     |                                                     est3married_mothers                                                     |
+     |                                                    -0.0446*** (0.0003)                                                     |
+     +-----------------------------------------------------------------------------------------------------------------------------+
+
+     +-----------------------------------------------------------------------------------------------------------------------------+
+  8. |    varname |     est1all_mothers |      est2all_mothers |      est3all_mothers | est1married_mothers |  est2married_mothers |
+     |    r_black |                     |  0.0833*** (0.0024) |  0.0833*** (0.0024) |                     |  0.0760*** (0.0043) |
+     |-----------------------------------------------------------------------------------------------------------------------------|
+     |                                                     est3married_mothers                                                     |
+     |                                                     0.0760*** (0.0043)                                                     |
+     +-----------------------------------------------------------------------------------------------------------------------------+
+
+     +-----------------------------------------------------------------------------------------------------------------------------+
+  9. |    varname |     est1all_mothers |      est2all_mothers |      est3all_mothers | est1married_mothers |  est2married_mothers |
+     |       hisp |                     |  0.1430*** (0.0028) |  0.1430*** (0.0028) |                     |  0.1467*** (0.0036) |
+     |-----------------------------------------------------------------------------------------------------------------------------|
+     |                                                     est3married_mothers                                                     |
+     |                                                     0.1467*** (0.0036)                                                     |
+     +-----------------------------------------------------------------------------------------------------------------------------+
+
+     +-----------------------------------------------------------------------------------------------------------------------------+
+ 10. |    varname |     est1all_mothers |      est2all_mothers |      est3all_mothers | est1married_mothers |  est2married_mothers |
+     |      r_oth |                     |  0.0722*** (0.0048) |  0.0722*** (0.0048) |                     |  0.0603*** (0.0057) |
+     |-----------------------------------------------------------------------------------------------------------------------------|
+     |                                                     est3married_mothers                                                     |
+     |                                                     0.0603*** (0.0057)                                                     |
+     +-----------------------------------------------------------------------------------------------------------------------------+
+
+     +-----------------------------------------------------------------------------------------------------------------------------+
+ 11. |    varname |     est1all_mothers |      est2all_mothers |      est3all_mothers | est1married_mothers |  est2married_mothers |
+     |         r2 |               0.004 |                0.095 |                0.095 |               0.005 |                0.091 |
+     |-----------------------------------------------------------------------------------------------------------------------------|
+     |                                                     est3married_mothers                                                     |
+     |                                                                   0.091                                                     |
+     +-----------------------------------------------------------------------------------------------------------------------------+
 
 .         export excel using "${out}/table_results.xlsx", sheet("table 6") sheetreplace firstrow(varlabels) keepcellfmt
 file C:\Users\Jennah\Desktop\Code\replication_aem/Output/table_results.xlsx saved
@@ -8980,7 +9047,7 @@ dir : seeout
 . 
 . postfile `memhold' str30(varname sample) double(model order) str30(est) ///
 >         using `tbl7', replace
-(file C:\Users\Jennah\AppData\Local\Temp\ST_da8c_00000i.tmp not found)
+(file C:\Users\Jennah\AppData\Local\Temp\ST_1053c_00000i.tmp not found)
 
 . 
 . forvalues s = 1/3 {
@@ -8997,8 +9064,9 @@ dir : seeout
  10.                                 if `i' == 3     local covars    `allcov_alt'
  11.                                 else                    local covars    `allcov'
  12. 
-.                                 if inlist(`i', 2, 3)    ivregress 2sls  `depvar'                        `covars' (cnum_mt2 = `instr`i''),       r
- 13.                                 else                                    reg                     `depvar' cnum_mt2       `covars',                                                       r
+.                                 if inlist(`i', 2, 3)    ivregress 2sls  `depvar'   (cnum_mt2 = `instr`i'')      `covars',       r
+ 13.                                 else                                    reg                     `depvar'        cnum_mt2           
+>                      `covars',       r
  14. 
 .                                 if inlist("`depvar'", "incwage") {
  15.                                         local est : di %6.2f `=_b[cnum_mt2]'
@@ -10345,19 +10413,55 @@ xij variables:
 
 . 
 .         * display table 7 before exporting
-.         list *
+.         list *, ab(8)
 
-     +-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-     |   varname       est1all_mothers       est2all_mothers       est3all_mothers   est1married_mothers   est2married_mothers   est3married_mothers   est1married_fathers   est2married_fathers   est3married_fathers |
-     |-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-  1. | wkpay_lyr      -0.173  (0.002)      -0.129  (0.026)      -0.122  (0.025)      -0.162  (0.002)      -0.124  (0.028)      -0.118  (0.028)      -0.008  (0.001)       0.006  (0.009)       0.003  (0.009) |
-  2. |  wkswork1      -8.768  (0.071)      -6.205  (1.133)      -5.886  (1.126)      -7.827  (0.089)      -5.833  (1.224)      -5.664  (1.216)      -0.850  (0.046)       0.604  (0.610)       0.452  (0.606) |
-  3. |  uhrswork      -6.538  (0.062)      -4.777  (0.972)      -4.508  (0.966)      -5.854  (0.076)      -5.024  (1.033)      -4.837  (1.026)       0.217  (0.054)       0.803  (0.711)       0.727  (0.707) |
-  4. |   incwage   -3639.61  ( 33.55)   -2169.72  (536.41)   -2097.92  (533.66)   -3048.90  ( 39.71)   -1736.58  (555.74)   -1749.73  (552.43)   -1792.17  (102.26)   -355.51  (1356.42)   -414.19  (1348.97) |
-  5. | l_ftotinc      -0.131  (0.005)      -0.046  (0.070)      -0.055  (0.069)      -0.132  (0.005)      -0.055  (0.060)      -0.058  (0.060)      -0.150  (0.005)      -0.051  (0.061)      -0.055  (0.060) |
-     |-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-  6. | l_nonwinc       0.209  (0.008)       0.120  (0.124)       0.075  (0.123)      -0.055  (0.006)       0.043  (0.072)       0.031  (0.071)      -0.980  (0.017)      -0.736  (0.226)      -0.690  (0.225) |
-     +-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+     +-------------------------------------------------------------------------------------------------------------------------+
+  1. |   varname |     est1all_mothers |     est2all_mothers |     est3all_mothers | est1married_mothers | est2married_mothers |
+     | wkpay_lyr |    -0.173  (0.002) |    -0.129  (0.026) |    -0.122  (0.025) |    -0.162  (0.002) |    -0.124  (0.028) |
+     |-------------------------------------------------------------------------------------------------------------------------|
+     |     est3married_mothers     |     est1married_fathers     |     est2married_fathers      |     est3married_fathers      |
+     |        -0.118  (0.028)     |        -0.008  (0.001)     |         0.006  (0.009)      |         0.003  (0.009)      |
+     +-------------------------------------------------------------------------------------------------------------------------+
+
+     +-------------------------------------------------------------------------------------------------------------------------+
+  2. |   varname |     est1all_mothers |     est2all_mothers |     est3all_mothers | est1married_mothers | est2married_mothers |
+     |  wkswork1 |    -8.768  (0.071) |    -6.205  (1.133) |    -5.886  (1.126) |    -7.827  (0.089) |    -5.833  (1.224) |
+     |-------------------------------------------------------------------------------------------------------------------------|
+     |     est3married_mothers     |     est1married_fathers     |     est2married_fathers      |     est3married_fathers      |
+     |        -5.664  (1.216)     |        -0.850  (0.046)     |         0.604  (0.610)      |         0.452  (0.606)      |
+     +-------------------------------------------------------------------------------------------------------------------------+
+
+     +-------------------------------------------------------------------------------------------------------------------------+
+  3. |   varname |     est1all_mothers |     est2all_mothers |     est3all_mothers | est1married_mothers | est2married_mothers |
+     |  uhrswork |    -6.538  (0.062) |    -4.777  (0.972) |    -4.508  (0.966) |    -5.854  (0.076) |    -5.024  (1.033) |
+     |-------------------------------------------------------------------------------------------------------------------------|
+     |     est3married_mothers     |     est1married_fathers     |     est2married_fathers      |     est3married_fathers      |
+     |        -4.837  (1.026)     |         0.217  (0.054)     |         0.803  (0.711)      |         0.727  (0.707)      |
+     +-------------------------------------------------------------------------------------------------------------------------+
+
+     +-------------------------------------------------------------------------------------------------------------------------+
+  4. |   varname |     est1all_mothers |     est2all_mothers |     est3all_mothers | est1married_mothers | est2married_mothers |
+     |   incwage | -3639.61  ( 33.55) | -2169.72  (536.41) | -2097.92  (533.66) | -3048.90  ( 39.71) | -1736.58  (555.74) |
+     |-------------------------------------------------------------------------------------------------------------------------|
+     |     est3married_mothers     |     est1married_fathers     |     est2married_fathers      |     est3married_fathers      |
+     |     -1749.73  (552.43)     |     -1792.17  (102.26)     |     -355.51  (1356.42)      |     -414.19  (1348.97)      |
+     +-------------------------------------------------------------------------------------------------------------------------+
+
+     +-------------------------------------------------------------------------------------------------------------------------+
+  5. |   varname |     est1all_mothers |     est2all_mothers |     est3all_mothers | est1married_mothers | est2married_mothers |
+     | l_ftotinc |    -0.131  (0.005) |    -0.046  (0.070) |    -0.055  (0.069) |    -0.132  (0.005) |    -0.055  (0.060) |
+     |-------------------------------------------------------------------------------------------------------------------------|
+     |     est3married_mothers     |     est1married_fathers     |     est2married_fathers      |     est3married_fathers      |
+     |        -0.058  (0.060)     |        -0.150  (0.005)     |        -0.051  (0.061)      |        -0.055  (0.060)      |
+     +-------------------------------------------------------------------------------------------------------------------------+
+
+     +-------------------------------------------------------------------------------------------------------------------------+
+  6. |   varname |     est1all_mothers |     est2all_mothers |     est3all_mothers | est1married_mothers | est2married_mothers |
+     | l_nonwinc |     0.209  (0.008) |     0.120  (0.124) |     0.075  (0.123) |    -0.055  (0.006) |     0.043  (0.072) |
+     |-------------------------------------------------------------------------------------------------------------------------|
+     |     est3married_mothers     |     est1married_fathers     |     est2married_fathers      |     est3married_fathers      |
+     |         0.031  (0.071)     |        -0.980  (0.017)     |        -0.736  (0.226)      |        -0.690  (0.225)      |
+     +-------------------------------------------------------------------------------------------------------------------------+
 
 .         export excel using "${out}/table_results.xlsx", sheet("table 7") sheetreplace firstrow(varlabels) keepcellfmt
 file C:\Users\Jennah\Desktop\Code\replication_aem/Output/table_results.xlsx saved
@@ -10369,5 +10473,5 @@ file C:\Users\Jennah\Desktop\Code\replication_aem/Output/table_results.xlsx save
       name:  <unnamed>
        log:  C:\Users\Jennah\Desktop\Code\replication_aem/Programs/01_produce_datafile.log
   log type:  text
- closed on:  15 Dec 2021, 22:17:32
-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ closed on:  15 Dec 2021, 23:48:05
+----------------------------------------------------------------------------------------------------------------------------------------
