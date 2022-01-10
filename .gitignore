@@ -1,5 +1,8 @@
 *
 !.gitignore
 !*.do
+!*.txt
+!*.xlsx
+!*.docx
 !*.log
 !/Programs/
